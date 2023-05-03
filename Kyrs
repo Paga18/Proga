@@ -1,0 +1,112 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <locale.h>
+#include <stdlib.h>
+
+struct player {
+	int name;
+	int cards[11];
+	int split[11];
+	int bank;
+	int complexity;
+	struct player* next;
+};
+
+void print(struct player* plist) {
+	int i = 4;
+	for (struct player* p = plist;i > 0;p = p->next)
+	{
+		printf("%d", p->name);
+		i--;
+	}
+}
+
+void default_set(struct player ** plist) 
+{
+	int i = 3;
+	while (i) {
+		struct player* p = (struct player*)malloc(sizeof(struct player));
+		p->name = i;
+		p->bank = 10000;
+		p->complexity = 1;
+		p->next = *plist;
+		*plist = p;
+		i--;
+	}
+	
+}
+
+void setting(struct player** plist)
+{
+	printf("//");
+	char a;
+	scanf("%c", &a);
+	switch (a)
+	{
+		case 'c': {
+
+			break;
+		}
+		case 'd': {
+		
+			break;
+		}
+		case 'a': {
+
+			break;
+		}
+		default: {
+			printf("\nIncorrect input\n");
+			break;
+		}
+	}
+
+}
+
+void play(struct player** plist)
+{
+	struct player* p = (struct player*)malloc(sizeof(struct player));
+	p->name = 9; // спршиваем имя игрока
+	p->next = *plist;
+	*plist = p;
+}
+
+int main()
+{
+	setlocale(LC_ALL, "Rus");
+	printf("//menu");
+	char a;
+	scanf("%c", &a);
+	struct player z;
+	z.next = NULL;
+	struct player* begin = &z;
+	begin->name = 0;
+	default_set(&begin);
+	print(begin);
+	while (1) {
+		switch (a) 
+			{
+			case 'y': 
+			{
+				play(&begin);
+				break;
+			}
+			case's': 
+			{
+				setting(&begin);
+				break;
+			}
+			case 'e': 
+			{
+				return 0;
+				break;
+			}
+			default:
+			{
+				printf("Incorrect input");
+				break;
+			}
+		}
+	}
+}
+
