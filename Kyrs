@@ -9,21 +9,9 @@ struct player {
 	int name;
 	int cards[11];
 	int split[11];
-	int bank;
 	int complexity;
 	struct player* next;
 };
-
-long long LKG()
-{
-	unsigned long long x0 = rand();
-	long long a = 61086453;
-	int c = 17;
-	unsigned long long m = pow(2, 32);
-	unsigned long long number = 0;
-	number = (x0 * a + c) % m;
-	return number % 52;
-}
 
 void print(struct player* plist) {
 	int i = 4;
@@ -40,13 +28,10 @@ void default_set(struct player ** plist)
 	while (i) {
 		struct player* p = (struct player*)malloc(sizeof(struct player));
 		p->name = i;
-		p->bank = 10000;
-		p->complexity = 1;
 		p->next = *plist;
 		*plist = p;
 		i--;
 	}
-	
 }
 
 void player(struct player** plist)
@@ -54,6 +39,8 @@ void player(struct player** plist)
 	struct player* user = (struct player*)malloc(sizeof(struct player));
 	user->name = 9; // спрашиваем имя игрока
 	user->next = *plist;
+	for (int s = 0;s < 11;s++)
+		user->cards[s] = 0;
 	*plist = user;
 }
 
@@ -96,93 +83,11 @@ int is_empty(struct player* plist)
 	return plist == NULL;
 }
 
-int schet(struct player* plist,int count)
+void easy_level(struct player* point3, short cards[52])
 {
-	int sum=0;
-	struct player* p = plist;
-	for (int i = 0;i < count;i++) {
-		sum += p->cards[i];
-	}
-	return sum;
-}
-
-void play(struct player* plist)
-{
-	srand(time(NULL));
-	short cards[52] = { 2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7,8,8,8,8,9,9,9,9,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,11,11,11,11 };
-	
-	for (struct player* point = plist;!is_empty(point);point = point->next) // раздача карт
-	{
-		for (int i = 0;i < 2;i++) 
-		{
-			int number = rand(time(NULL))%52;
-			while (cards[number] < 0)
-				number = rand(time(NULL))%52;
-			point->cards[i] = cards[number];
-			cards[number] = -1;
-			if (is_empty(point->next) && i == 1)
-				printf("?");
-			else
-				printf("%d ", point->cards[i]);
-		}
-		printf("\n");
-	}
-
-	int chose = 0;
-	int i = 1;
-	int cout = 2;
-	while(i) {
-		printf("Выберите действие: 1 - взять карту, 2 - хватит: ");
-		scanf("%d", &chose);
-		switch (chose)
-		{
-		case 1:
-		{
-			if (schet(plist, cout) < 21) // берем дополнительную карту
-			{
-				int number = rand(time(NULL))%52;
-				while (cards[number] < 0)
-					number=rand(time(NULL)) % 52;
-				plist->cards[cout] = cards[number];
-				cards[number] = -1;
-				cout++;
-				for (int q = 0;q < cout;q++)
-					printf("%d ", plist->cards[q]);
-				if (schet(plist, cout) > 21)
-				{
-					i = 0;
-					printf("Перебор\n");
-				}
-			}
-			break;
-		}
-		case 2:
-		{
-			i = 0;
-			break;
-		}
-		case 3:
-		{
-			break;
-		}
-		case 4:
-		{
-			break;
-		}
-		default:
-		{
-			printf("Incorrect input");
-			i = 0;
-			break;
-		}
-		}
-	}
-	struct player* point3 = plist;
-	point3 = point3->next;
-	while(point3->next != NULL)
-	{
-		int count = 2;
-		while (schet(point3, count) < 17)
+	int count = 2;
+	if (schet(point3) < 17) {
+		while (schet(point3) < 17)
 		{
 			int number = rand() % 52;
 			while (cards[number] < 0)
@@ -190,13 +95,203 @@ void play(struct player* plist)
 			point3->cards[count] = cards[number];
 			cards[number] = -1;
 			count++;
+
+			if (schet(point3) > 21)
+			{
+				for (int j = 0;j < count;j++)
+				{
+					if (point3->cards[j] == 11)
+					{
+						point3->cards[j] = 1;
+						j = count;
+					}
+				}
+			}
 		}
-		for (int q = 0;q < count;q++)
-			printf("%d ", point3->cards[q]);
-		if (schet(point3, count) > 21)
-			printf("Перебор");
+	}
+	else if (schet(point3) > 21)
+	{
+		for (int j = 0;j < count;j++)
+		{
+			if (point3->cards[j] == 11)
+			{
+				point3->cards[j] = 1;
+				j = count;
+			}
+		}
+		while (schet(point3) < 17)
+		{
+			int number = rand() % 52;
+			while (cards[number] < 0)
+				number = rand() % 52;
+			point3->cards[count] = cards[number];
+			cards[number] = -1;
+			count++;
+
+			if (schet(point3) > 21)
+			{
+				for (int j = 0;j < count;j++)
+				{
+					if (point3->cards[j] == 11)
+					{
+						point3->cards[j] = 1;
+						j = 0;
+					}
+				}
+			}
+		}
+	}
+	for (int j = 0;j < count;j++)
+		printf("%d ", point3->cards[j]);
+	if (schet(point3, count) > 21)
+		printf("Перебор");
+
+	point3 = point3->next;
+	printf("\n");
+}
+
+
+int schet(struct player* plist)
+{
+	int sum=0;
+	struct player* p = plist;
+	for (int i = 0;i < 11;i++) {
+		sum += p->cards[i];
+	}
+	return sum;
+}
+
+void is_win(struct player* plist, int sum_d)
+{
+	while (plist->next!=NULL)
+	{
+		if (schet(plist) > 21)
+		{
+			printf("Вы проиграли.\n");
+		}
+		else if (sum_d > 21 || schet(plist) > sum_d)
+		{
+			printf("Вы выиграли, поздравляем!\n");
+		}
+		else if (schet(plist) == sum_d)
+			printf("Ничья.\n");
+		else
+			printf("Вы проиграли.\n");
+		plist = plist->next;
+	}
+}
+
+void play(struct player* plist)
+{
+	int game = 1;
+	while(game == 1) {
+		game = 0;
+		srand(time(NULL));
+		short cards[52] = { 2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7,8,8,8,8,9,9,9,9,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,11,11,11,11 };
+
+		for (struct player* point = plist;!is_empty(point);point = point->next) // раздача карт
+		{
+			for (int i = 0;i < 2;i++)
+			{
+				int number = rand(time(NULL)) % 52;
+				while (cards[number] < 0)
+					number = rand(time(NULL)) % 52;
+				point->cards[i] = cards[number];
+				cards[number] = -1;
+				if (is_empty(point->next) && i == 1)
+					printf("?");
+				else
+					printf("%d ", point->cards[i]);
+			}
+			printf("\n");
+		}
+
+		int chose = 0;
+		int i = 1;
+		int cout = 2;
+		while (i) {
+			printf("Выберите действие: 1 - взять карту, 2 - хватит: ");
+			scanf("%d", &chose);
+			switch (chose)
+			{
+			case 1:
+			{
+
+				// берем дополнительную карту
+
+				int number = rand(time(NULL)) % 52;
+				while (cards[number] < 0)
+					number = rand(time(NULL)) % 52;
+				plist->cards[cout] = cards[number];
+				cards[number] = -1;
+				cout++;
+				if (schet(plist) > 21)
+				{
+					int flazhok = 0;
+					for (int j = 0;j < cout;j++)
+					{
+						if (plist->cards[j] == 11)
+						{
+							plist->cards[j] = 1;
+							j = 0;
+							flazhok++;
+						}
+					}
+					for (int q = 0;q < cout;q++)
+						printf("%d ", plist->cards[q]);
+					if (!flazhok) {
+						i = 0;
+						printf("Перебор\n");
+					}
+				}
+				else
+				{
+					for (int q = 0;q < cout;q++)
+						printf("%d ", plist->cards[q]);
+				}
+				break;
+			}
+			case 2:
+			{
+				for (int q = 0;q < cout;q++)
+					printf("%d ", plist->cards[q]);
+				printf("\n");
+				i = 0;
+				break;
+			}
+			case 3:
+			{
+				break;
+			}
+			case 4:
+			{
+				break;
+			}
+			default:
+			{
+				printf("Incorrect input");
+				i = 0;
+				break;
+			}
+			}
+		}
+
+		struct player* point3 = plist;
 		point3 = point3->next;
-		printf("\n");
+
+		for (; point3 != NULL; point3 = point3->next)
+		{
+			for (int s = 2;s < 11;s++)
+				point3->cards[s] = 0;
+			easy_level(point3, cards);
+		}
+		struct player* p = plist;
+		for (;p->next != NULL;) // p указывает на диллера
+			p = p->next;
+		int sum_d = schet(p);
+		is_win(plist, sum_d);
+		printf("Продолжить? 1 - да, 2 - нет\nДействие: ");
+		scanf("%d", &game);
 	}
 }
 
