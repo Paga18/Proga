@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <locale.h>
 #include <stdlib.h>
+#include <math.h>
+#include <time.h>
 
 struct player {
 	int name;
@@ -11,6 +13,17 @@ struct player {
 	int complexity;
 	struct player* next;
 };
+
+long long LKG()
+{
+	unsigned long long x0 = rand();
+	long long a = 61086453;
+	int c = 17;
+	unsigned long long m = pow(2, 32);
+	unsigned long long number = 0;
+	number = (x0 * a + c) % m;
+	return number % 52;
+}
 
 void print(struct player* plist) {
 	int i = 4;
@@ -36,13 +49,28 @@ void default_set(struct player ** plist)
 	
 }
 
+void player(struct player** plist)
+{
+	struct player* user = (struct player*)malloc(sizeof(struct player));
+	user->name = 9; // спрашиваем имя игрока
+	user->next = *plist;
+	*plist = user;
+}
+
+void pop_player(struct player** plist)
+{
+	struct player* p = *plist;
+	*plist = p->next;
+	free(p);
+}
+
 void setting(struct player** plist)
 {
 	printf("//");
-	char a;
-	scanf("%c", &a);
+	char a=0;
 	switch (a)
 	{
+		scanf("%c", &a);
 		case 'c': {
 
 			break;
@@ -63,42 +91,147 @@ void setting(struct player** plist)
 
 }
 
-void play(struct player** plist)
+int is_empty(struct player* plist)
 {
-	struct player* p = (struct player*)malloc(sizeof(struct player));
-	p->name = 9; // спршиваем имя игрока
-	p->next = *plist;
-	*plist = p;
+	return plist == NULL;
+}
+
+int schet(struct player* plist,int count)
+{
+	int sum=0;
+	struct player* p = plist;
+	for (int i = 0;i < count;i++) {
+		sum += p->cards[i];
+	}
+	return sum;
+}
+
+void play(struct player* plist)
+{
+	srand(time(NULL));
+	short cards[52] = { 2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7,8,8,8,8,9,9,9,9,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,11,11,11,11 };
+	
+	for (struct player* point = plist;!is_empty(point);point = point->next) // раздача карт
+	{
+		for (int i = 0;i < 2;i++) 
+		{
+			int number = rand(time(NULL))%52;
+			while (cards[number] < 0)
+				number = rand(time(NULL))%52;
+			point->cards[i] = cards[number];
+			cards[number] = -1;
+			if (is_empty(point->next) && i == 1)
+				printf("?");
+			else
+				printf("%d ", point->cards[i]);
+		}
+		printf("\n");
+	}
+
+	int chose = 0;
+	int i = 1;
+	int cout = 2;
+	while(i) {
+		printf("Выберите действие: 1 - взять карту, 2 - хватит: ");
+		scanf("%d", &chose);
+		switch (chose)
+		{
+		case 1:
+		{
+			if (schet(plist, cout) < 21) // берем дополнительную карту
+			{
+				int number = rand(time(NULL))%52;
+				while (cards[number] < 0)
+					number=rand(time(NULL)) % 52;
+				plist->cards[cout] = cards[number];
+				cards[number] = -1;
+				cout++;
+				for (int q = 0;q < cout;q++)
+					printf("%d ", plist->cards[q]);
+				if (schet(plist, cout) > 21)
+				{
+					i = 0;
+					printf("Перебор\n");
+				}
+			}
+			break;
+		}
+		case 2:
+		{
+			i = 0;
+			break;
+		}
+		case 3:
+		{
+			break;
+		}
+		case 4:
+		{
+			break;
+		}
+		default:
+		{
+			printf("Incorrect input");
+			i = 0;
+			break;
+		}
+		}
+	}
+	struct player* point3 = plist;
+	point3 = point3->next;
+	while(point3->next != NULL)
+	{
+		int count = 2;
+		while (schet(point3, count) < 17)
+		{
+			int number = rand() % 52;
+			while (cards[number] < 0)
+				number = rand() % 52;
+			point3->cards[count] = cards[number];
+			cards[number] = -1;
+			count++;
+		}
+		for (int q = 0;q < count;q++)
+			printf("%d ", point3->cards[q]);
+		if (schet(point3, count) > 21)
+			printf("Перебор");
+		point3 = point3->next;
+		printf("\n");
+	}
 }
 
 int main()
 {
 	setlocale(LC_ALL, "Rus");
-	printf("//menu");
-	char a;
-	scanf("%c", &a);
-	struct player z;
+
+	struct player z; // создание диллера
 	z.next = NULL;
 	struct player* begin = &z;
-	begin->name = 0;
-	default_set(&begin);
-	print(begin);
+	begin->name = 88;
+
+	default_set(&begin);  // стандартые настройки (3 бота на легком уровне)
+	//print(begin);
 	while (1) {
+		int a = 0;
+		printf("Добро пожаловать в карточную игру BlackJack!\n\n\t\t Меню\n\n\t  1 - начать играть\n\n\t  2 - настройки\n\n\t  3 - выход из игры\n\n\t  Выберите действие: ");
+		scanf("%d", &a);
 		switch (a) 
+		{
+			case 1: 
 			{
-			case 'y': 
-			{
-				play(&begin);
+				player(&begin); // добавление игрока
+				play(begin); // начать играть
+				pop_player(&begin); // удаление игрока 
 				break;
 			}
-			case's': 
+			case 2: 
 			{
-				setting(&begin);
+				setting(&begin); // настройки
 				break;
 			}
-			case 'e': 
+			case 3: 
 			{
-				return 0;
+				return 0; // выход из программы
 				break;
 			}
 			default:
